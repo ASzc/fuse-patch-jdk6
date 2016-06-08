@@ -1,17 +1,10 @@
 package org.wildfly.extras.patch.internal;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
-import javax.activation.DataHandler;
-import javax.activation.URLDataSource;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -20,12 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.wildfly.extras.patch.ManagedPath;
 import org.wildfly.extras.patch.PatchException;
 import org.wildfly.extras.patch.PatchId;
-import org.wildfly.extras.patch.PatchMetadata;
-import org.wildfly.extras.patch.PatchMetadataBuilder;
 import org.wildfly.extras.patch.PatchTool;
 import org.wildfly.extras.patch.PatchToolBuilder;
-import org.wildfly.extras.patch.repository.LocalFileRepository;
-import org.wildfly.extras.patch.utils.IllegalStateAssertion;
 
 public class SelfExecutingMain {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
@@ -39,7 +28,7 @@ public class SelfExecutingMain {
     }
 
     // Entry point with no system exit
-    public static void mainInternal(String[] args) throws Exception {
+    public static void mainInternal(String[] args) throws Throwable {
         SelfExecutingOptions options = new SelfExecutingOptions();
         CmdLineParser parser = new CmdLineParser(options);
         try {
@@ -89,7 +78,7 @@ public class SelfExecutingMain {
         // Query the server paths
         if (options.queryServerPaths != null) {
             PatchTool patchTool = builder.serverPath(options.serverHome).build();
-            List<String> managedPaths = new ArrayList<>();
+            List<String> managedPaths = new ArrayList<String>();
             for (ManagedPath managedPath : patchTool.getServer().queryManagedPaths(options.queryServerPaths)) {
                 managedPaths.add(managedPath.toString());
             }

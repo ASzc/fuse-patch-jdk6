@@ -1,17 +1,15 @@
 package org.wildfly.extras.patch.internal;
 
-import java.net.URL;
-import java.nio.file.Path;
+import java.io.File;
 
 import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 final class SelfExecutingOptions {
     @Option(name = "--help", help = true)
     boolean help;
 
     @Option(name = "--server", usage = "Path to the target server directory. Defaults to $JBOSS_HOME or $CWD.")
-    Path serverHome;
+    File serverHome;
 
     @Option(name = "--query-repository", usage = "Query the repository for available patches")
     boolean queryRepository;
