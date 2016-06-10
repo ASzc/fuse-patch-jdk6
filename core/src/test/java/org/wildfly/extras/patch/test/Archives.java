@@ -142,7 +142,7 @@ class Archives {
                 } else {
                     String relpath = rootPath.toURI().relativize(sub.toURI()).toString();
                     if (!relpath.startsWith("fusepatch")) {
-                        wasPaths.add(relpath);
+                        wasPaths.add(relpath.replace('/', File.separatorChar));
                     }
                 }
             }
