@@ -28,7 +28,7 @@
     <main-class name="org.wildfly.extras.patch.internal.Main"/>
     
     <resources>
-        <artifact name="${org.wildfly.extras.patch:fuse-patch-core}" />
+        <artifact name="${org.wildfly.extras.patch-jdk6:fuse-patch-core}" />
     </resources>
 
     <dependencies>

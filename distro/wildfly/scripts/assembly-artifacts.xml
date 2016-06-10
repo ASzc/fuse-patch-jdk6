@@ -56,7 +56,7 @@
 		<dependencySet>
 			<outputDirectory>/modules/system/layers/fuse/org/wildfly/extras/config/main</outputDirectory>
             <includes>
-                <include>org.wildfly.extras.patch:fuse-patch-config:jar</include>
+                <include>org.wildfly.extras.patch-jdk6:fuse-patch-config:jar</include>
             </includes>
 			<useStrictFiltering>true</useStrictFiltering>
 			<scope>provided</scope>
@@ -65,7 +65,7 @@
         <dependencySet>
             <outputDirectory>/modules/system/layers/fuse/org/wildfly/extras/patch/main</outputDirectory>
             <includes>
-                <include>org.wildfly.extras.patch:fuse-patch-core:jar</include>
+                <include>org.wildfly.extras.patch-jdk6:fuse-patch-core:jar</include>
             </includes>
             <useStrictFiltering>true</useStrictFiltering>
             <scope>provided</scope>
