@@ -2,7 +2,6 @@ package org.wildfly.extras.patch.repository;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
@@ -17,35 +16,41 @@ import javax.activation.URLDataSource;
 
 import org.wildfly.extras.patch.Patch;
 import org.wildfly.extras.patch.PatchId;
+import org.wildfly.extras.patch.internal.MetadataParser;
 
 public class JarResourceRepository extends AbstractRepository {
 
     private static void loadPatches(URL repoURL, List<PatchId> availablePatchIds, Map<PatchId, Patch> availablePatches,
             HashMap<PatchId, URL> availablePatchUrls) {
-        String repoPrefix = repoURL.toString().split("!", 1)[0] + "!/";
+        ClassLoader classloader = JarResourceRepository.class.getClassLoader();
 
-        InputStream indexStream = null;
+        BufferedReader indexReader = null;
         try {
-            indexStream = repoURL.openStream();
-
-            BufferedReader indexReader = new BufferedReader(new InputStreamReader(indexStream));
+            indexReader = new BufferedReader(new InputStreamReader(repoURL.openStream()));
             String line;
             while ((line = indexReader.readLine()) != null) {
                 String path = line.trim();
                 if (path != "") {
-                    InputStream patchStream = JarResourceRepository.class.getClassLoader().getResourceAsStream(path);
-                    if (patchStream == null) {
-                        throw new IllegalStateException("Indexed patch resource " + path + " is not accessible");
-                    } else {
-                        // TODO
-                        PatchId patchId = null;
-                        Patch patch = null;
+                    String metadataPath = path + ".metadata";
+                    URL patchMetadataUrl = classloader.getResource(metadataPath);
+                    if (patchMetadataUrl == null)
+                        throw new IllegalStateException("Indexed resource " + metadataPath + " is not accessible");
 
-                        availablePatchIds.add(patchId);
+                    String patchPath = path + ".zip";
+                    URL patchUrl = classloader.getResource(patchPath);
+                    if (patchUrl == null)
+                        throw new IllegalStateException("Indexed resource " + patchPath + " is not accessible");
+
+                    PatchId patchId = PatchId.fromURL(patchUrl);
+                    availablePatchIds.add(patchId);
+                    availablePatchUrls.put(patchId, patchUrl);
+
+                    BufferedReader metadataReader = new BufferedReader(new InputStreamReader(patchMetadataUrl.openStream()));
+                    try {
+                        Patch patch = MetadataParser.readPatch(metadataReader);
                         availablePatches.put(patchId, patch);
-
-                        URL patchUrl = new URL(repoPrefix + path);
-                        availablePatchUrls.put(patchId, patchUrl);
+                    } finally {
+                        metadataReader.close();
                     }
                 }
             }
@@ -53,8 +58,8 @@ public class JarResourceRepository extends AbstractRepository {
             throw new IllegalStateException(e);
         } finally {
             try {
-                if (indexStream != null)
-                    indexStream.close();
+                if (indexReader != null)
+                    indexReader.close();
             } catch (IOException e) {
             }
         }
