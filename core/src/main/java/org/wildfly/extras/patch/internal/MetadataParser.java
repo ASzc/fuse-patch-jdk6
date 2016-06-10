@@ -197,56 +197,60 @@ public final class MetadataParser {
         IllegalArgumentAssertion.assertNotNull(metadataFile, "metadataFile");
         IllegalArgumentAssertion.assertTrue(metadataFile.isFile(), "Cannot find metadata file: " + metadataFile);
 
-        PatchMetadataBuilder mdbuilder = new PatchMetadataBuilder();
-        Set<Record> records = new HashSet<Record>();
-
         BufferedReader br = new BufferedReader(new FileReader(metadataFile));
         try {
-            String line = br.readLine().trim();
-            IllegalStateAssertion.assertTrue(line.startsWith(VERSION_PREFIX), "Cannot obtain version info");
-            line = br.readLine().trim();
-            IllegalStateAssertion.assertTrue(line.startsWith(PATCHID_PREFIX), "Cannot obtain patch id");
-            mdbuilder.patchId(PatchId.fromString(line.substring(PATCHID_PREFIX.length()).trim()));
-            
-            String mode = null;
-            while (line != null) {
-                line = line.trim();
-                if (line.length() == 0 || line.startsWith("#")) {
-                    line = br.readLine();
-                    continue;
-                }
-                if (line.startsWith("[") && line.endsWith("]")) {
-                    mode = line;
-                    line = br.readLine();
-                    continue;
-                }
-                if ("[properties]".equals(mode)) {
-                    String[] toks = line.split(":");
-                    IllegalStateAssertion.assertEquals(2, toks.length, "Illegal property spec: " + line);
-                    String name = toks[0].trim();
-                    String value = toks[1].trim();
-                    if ("Roles".equals(name)) {
-                        for (String tok : value.split(",")) {
-                            mdbuilder.roles(tok.trim());
-                        }
-                    }
-                    if ("Dependencies".equals(name)) {
-                        for (String tok : value.split(",")) {
-                            mdbuilder.dependencies(PatchId.fromString(tok.trim()));
-                        }
-                    }
-                }
-                if ("[content]".equals(mode)) {
-                    records.add(Record.fromString(line));
-                }
-                if ("[post-install-commands]".equals(mode)) {
-                    mdbuilder.postCommands(line);
-                }
-                line = br.readLine();
-            }
-            return Patch.create(mdbuilder.build(), records);
+            return readPatch(br);
         } finally {
             br.close();
         }
+    }
+
+    public static Patch readPatch(BufferedReader metadataReader) throws IOException {
+        PatchMetadataBuilder mdbuilder = new PatchMetadataBuilder();
+        Set<Record> records = new HashSet<Record>();
+
+        String line = metadataReader.readLine().trim();
+        IllegalStateAssertion.assertTrue(line.startsWith(VERSION_PREFIX), "Cannot obtain version info");
+        line = metadataReader.readLine().trim();
+        IllegalStateAssertion.assertTrue(line.startsWith(PATCHID_PREFIX), "Cannot obtain patch id");
+        mdbuilder.patchId(PatchId.fromString(line.substring(PATCHID_PREFIX.length()).trim()));
+
+        String mode = null;
+        while (line != null) {
+            line = line.trim();
+            if (line.length() == 0 || line.startsWith("#")) {
+                line = metadataReader.readLine();
+                continue;
+            }
+            if (line.startsWith("[") && line.endsWith("]")) {
+                mode = line;
+                line = metadataReader.readLine();
+                continue;
+            }
+            if ("[properties]".equals(mode)) {
+                String[] toks = line.split(":");
+                IllegalStateAssertion.assertEquals(2, toks.length, "Illegal property spec: " + line);
+                String name = toks[0].trim();
+                String value = toks[1].trim();
+                if ("Roles".equals(name)) {
+                    for (String tok : value.split(",")) {
+                        mdbuilder.roles(tok.trim());
+                    }
+                }
+                if ("Dependencies".equals(name)) {
+                    for (String tok : value.split(",")) {
+                        mdbuilder.dependencies(PatchId.fromString(tok.trim()));
+                    }
+                }
+            }
+            if ("[content]".equals(mode)) {
+                records.add(Record.fromString(line));
+            }
+            if ("[post-install-commands]".equals(mode)) {
+                mdbuilder.postCommands(line);
+            }
+            line = metadataReader.readLine();
+        }
+        return Patch.create(mdbuilder.build(), records);
     }
 }
