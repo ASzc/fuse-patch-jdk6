@@ -53,8 +53,8 @@ public class SelfExecutingMain {
     private static void run(CmdLineParser cmdParser, SelfExecutingOptions options) throws IOException, JAXBException {
         // Configure the patch tool builder
         PatchToolBuilder builder = new PatchToolBuilder();
-        //System.out.println(SelfExecutingMain.class.getClassLoader().getResource("repository/"));
-        builder.repositoryURL(SelfExecutingMain.class.getClassLoader().getResource("repository/"));
+        // See JarURLConnection
+        builder.repositoryURL(SelfExecutingMain.class.getClassLoader().getResource("repository.index"));
         if (options.serverHome != null) {
             builder.serverPath(options.serverHome);
         }

@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.wildfly.extras.patch.aether.AetherFactory;
 import org.wildfly.extras.patch.internal.DefaultPatchTool;
 import org.wildfly.extras.patch.repository.AetherRepository;
+import org.wildfly.extras.patch.repository.JarResourceRepository;
 import org.wildfly.extras.patch.repository.LocalFileRepository;
 import org.wildfly.extras.patch.repository.RepositoryClient;
 import org.wildfly.extras.patch.server.ServerFactory;
@@ -140,6 +141,10 @@ public final class PatchToolBuilder {
                 if (protocol.equals("file")) {
                     File rootPath = getAbsolutePath(repoUrl);
                     repository = new LocalFileRepository(lock, rootPath);
+                }
+
+                if (protocol.equals("jar")) {
+                    repository = new JarResourceRepository(lock, repoUrl);
                 }
 
                 IllegalStateAssertion.assertNotNull(repository, "Unsupported protocol: " + protocol);
