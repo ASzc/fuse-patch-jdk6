@@ -26,9 +26,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.wildfly.extras.patch.aether.AetherFactory;
 import org.wildfly.extras.patch.internal.DefaultPatchTool;
-import org.wildfly.extras.patch.repository.AetherRepository;
 import org.wildfly.extras.patch.repository.JarResourceRepository;
 import org.wildfly.extras.patch.repository.LocalFileRepository;
 import org.wildfly.extras.patch.repository.RepositoryClient;
@@ -49,7 +47,6 @@ public final class PatchToolBuilder {
     private URL repoUrl;
     private File serverPath;
     private ServerFactory serverFactory;
-    private AetherFactory aetherFactory;
     private String username;
     private String password;
 
@@ -76,12 +73,6 @@ public final class PatchToolBuilder {
     public PatchToolBuilder repositoryURL(URL repoUrl) {
         IllegalArgumentAssertion.assertNotNull(repoUrl, "repoUrl");
         this.repoUrl = repoUrl;
-        return this;
-    }
-
-    public PatchToolBuilder aetherFactory(AetherFactory aetherFactory) {
-        IllegalArgumentAssertion.assertNotNull(aetherFactory, "aetherFactory");
-        this.aetherFactory = aetherFactory;
         return this;
     }
 
@@ -120,35 +111,28 @@ public final class PatchToolBuilder {
     private Repository buildRepository() {
         if (repository == null) {
 
-            // Aether repository
-            if (aetherFactory != null) {
-                repository = new AetherRepository(lock, aetherFactory);
-
-            } else {
-
-                if (repoUrl == null) {
-                    repoUrl = buildServer().getDefaultRepositoryURL();
-                    IllegalStateAssertion.assertNotNull(repoUrl, "Cannot obtain repository URL");
-                }
-
-                // Remote jaxws repository
-                String protocol = repoUrl.getProtocol();
-                if (protocol.startsWith("http")) {
-                    repository = new RepositoryClient(lock, repoUrl, username, password);
-                }
-
-                // Local file repository
-                if (protocol.equals("file")) {
-                    File rootPath = getAbsolutePath(repoUrl);
-                    repository = new LocalFileRepository(lock, rootPath);
-                }
-
-                if (protocol.equals("jar")) {
-                    repository = new JarResourceRepository(lock, repoUrl);
-                }
-
-                IllegalStateAssertion.assertNotNull(repository, "Unsupported protocol: " + protocol);
+            if (repoUrl == null) {
+                repoUrl = buildServer().getDefaultRepositoryURL();
+                IllegalStateAssertion.assertNotNull(repoUrl, "Cannot obtain repository URL");
             }
+
+            // Remote jaxws repository
+            String protocol = repoUrl.getProtocol();
+            if (protocol.startsWith("http")) {
+                repository = new RepositoryClient(lock, repoUrl, username, password);
+            }
+
+            // Local file repository
+            if (protocol.equals("file")) {
+                File rootPath = getAbsolutePath(repoUrl);
+                repository = new LocalFileRepository(lock, rootPath);
+            }
+
+            if (protocol.equals("jar")) {
+                repository = new JarResourceRepository(lock, repoUrl);
+            }
+
+            IllegalStateAssertion.assertNotNull(repository, "Unsupported protocol: " + protocol);
         }
         return repository;
     }

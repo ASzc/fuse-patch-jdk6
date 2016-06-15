@@ -26,8 +26,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
-import org.wildfly.extras.patch.aether.AetherFactory;
-
 public final class Configuration {
 
     public static final String PROPERTY_SERVER_HOME = "server.home";
@@ -38,7 +36,6 @@ public final class Configuration {
 
     private File serverPath;
     private URL repoUrl;
-    private String aetherFactory;
     private String username;
     private String password;
 
@@ -79,10 +76,6 @@ public final class Configuration {
         if (propval != null) {
             config.password = propval;
         }
-        propval = props.getProperty(PROPERTY_AETHER_FACTORY);
-        if (propval != null) {
-            config.aetherFactory = propval;
-        }
         return config;
     }
 
@@ -95,14 +88,6 @@ public final class Configuration {
         }
         if (username != null && password != null) {
             builder.credentials(username, password);
-        }
-        if (aetherFactory != null) {
-            try {
-                Class<?> clazz = getClass().getClassLoader().loadClass(aetherFactory);
-                builder.aetherFactory((AetherFactory) clazz.newInstance());
-            } catch (Exception ex) {
-                throw new IllegalStateException(ex);
-            }
         }
     }
 }
