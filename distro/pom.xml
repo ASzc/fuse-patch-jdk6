@@ -33,7 +33,9 @@
 
     <modules>
         <module>selfexecuting</module>
+        <!--
         <module>standalone</module>
         <module>wildfly</module>
+        -->
     </modules>
 </project>
