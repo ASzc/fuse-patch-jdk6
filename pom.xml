@@ -78,7 +78,9 @@
 
     <!-- Modules -->
     <modules>
+        <!--
         <module>config</module>
+        -->
         <module>core</module>
         <module>distro</module>
         <!--
