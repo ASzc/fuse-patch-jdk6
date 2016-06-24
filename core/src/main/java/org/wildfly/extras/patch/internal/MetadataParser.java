@@ -153,43 +153,38 @@ public final class MetadataParser {
         IllegalArgumentAssertion.assertNotNull(patch, "patch");
         IllegalArgumentAssertion.assertNotNull(outstream, "outstream");
         PrintStream pw = new PrintStream(outstream);
-        try {
+        if (addHeader) {
+            pw.println(VERSION_PREFIX + " " + PatchTool.VERSION);
+            pw.println(PATCHID_PREFIX + " " + patch.getPatchId());
+        }
 
-            if (addHeader) {
-                pw.println(VERSION_PREFIX + " " + PatchTool.VERSION);
-                pw.println(PATCHID_PREFIX + " " + patch.getPatchId());
-            }
+        pw.println();
+        pw.println("[properties]");
+        PatchMetadata metadata = patch.getMetadata();
+        if (!metadata.getRoles().isEmpty()) {
+            String spec = metadata.getRoles().toString();
+            spec = spec.substring(1, spec.length() - 1);
+            pw.println("Roles: " + spec);
+        }
+        if (!metadata.getDependencies().isEmpty()) {
+            String spec = metadata.getDependencies().toString();
+            spec = spec.substring(1, spec.length() - 1);
+            pw.println("Dependencies: " + spec);
+        }
 
+        pw.println();
+        pw.println("[content]");
+        for (Record rec : patch.getRecords()) {
+            pw.println(rec.toString());
+        }
+
+        List<String> commands = metadata.getPostCommands();
+        if (!commands.isEmpty()) {
             pw.println();
-            pw.println("[properties]");
-            PatchMetadata metadata = patch.getMetadata();
-            if (!metadata.getRoles().isEmpty()) {
-                String spec = metadata.getRoles().toString();
-                spec = spec.substring(1, spec.length() - 1);
-                pw.println("Roles: " + spec);
+            pw.println("[post-install-commands]");
+            for (String cmd : commands) {
+                pw.println(cmd);
             }
-            if (!metadata.getDependencies().isEmpty()) {
-                String spec = metadata.getDependencies().toString();
-                spec = spec.substring(1, spec.length() - 1);
-                pw.println("Dependencies: " + spec);
-            }
-
-            pw.println();
-            pw.println("[content]");
-            for (Record rec : patch.getRecords()) {
-                pw.println(rec.toString());
-            }
-
-            List<String> commands = metadata.getPostCommands();
-            if (!commands.isEmpty()) {
-                pw.println();
-                pw.println("[post-install-commands]");
-                for (String cmd : commands) {
-                    pw.println(cmd);
-                }
-            }
-        } finally {
-            pw.close();
         }
     }
 
