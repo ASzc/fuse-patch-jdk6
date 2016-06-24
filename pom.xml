@@ -83,6 +83,7 @@
         -->
         <module>core</module>
         <module>distro</module>
+        <module>bootstrap</module>
         <!--
         <module>docs</module>
         <module>feature</module>
