@@ -124,7 +124,7 @@ public class Main {
                 if (rootCandidate == null) {
                     rootCandidateName = name;
                     rootCandidate = split;
-                } else if (rootCandidate[0] != split[0]) {
+                } else if (!rootCandidate[0].equals(split[0])) {
                     // There isn't just one root directory
                     rootCandidateName = null;
                     break;
