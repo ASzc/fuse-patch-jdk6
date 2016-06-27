@@ -64,7 +64,12 @@ public class Main {
                 Map<String, Long> entries = copyAndEnumerateZipEntries(input, output);
                 Patch patch = createPatchFromZipEntries(entries, patchName, patchVersion);
 
-                appendMetadataEntries(output, patch);
+                String root = findArchiveRootDirectory(entries);
+                // In the case of no unique root directory, add another root
+                // directory
+                if (root == null)
+                    root = "";
+                appendMetadataEntries(output, patch, root);
                 output.close();
             } finally {
                 if (zipFileOutputStream != null)
@@ -109,6 +114,29 @@ public class Main {
         return ret;
     }
 
+    public static String findArchiveRootDirectory(Map<String, Long> entries) {
+        String rootCandidateName = null;
+        String[] rootCandidate = null;
+        for (Entry<String, Long> entry : entries.entrySet()) {
+            String name = entry.getKey();
+            if (name.endsWith("/")) {
+                String[] split = name.split("/");
+                if (rootCandidate == null) {
+                    rootCandidateName = name;
+                    rootCandidate = split;
+                } else if (rootCandidate[0] != split[0]) {
+                    // There isn't just one root directory
+                    rootCandidateName = null;
+                    break;
+                } else if (rootCandidate.length > split.length) {
+                    rootCandidateName = name;
+                    rootCandidate = split;
+                }
+            }
+        }
+        return rootCandidateName;
+    }
+
     public static Patch createPatchFromZipEntries(Map<String, Long> entries, String patchName, String patchVersion) {
         PatchId patchId = PatchId.create(patchName, patchVersion);
         Collection<Record> records = new ArrayList<Record>(entries.size());
@@ -119,17 +147,18 @@ public class Main {
         return Patch.create(new PatchMetadataBuilder().patchId(patchId).build(), records);
     }
 
-    public static void appendMetadataEntries(ZipOutputStream output, Patch patch) throws IOException {
-        output.putNextEntry(new ZipEntry("fusepatch/"));
-        output.putNextEntry(new ZipEntry("fusepatch/repository/"));
-        output.putNextEntry(new ZipEntry("fusepatch/workspace/"));
-        output.putNextEntry(new ZipEntry("fusepatch/workspace/audit.log"));
-        output.putNextEntry(new ZipEntry("fusepatch/workspace/managed-paths.metadata"));
+    public static void appendMetadataEntries(ZipOutputStream output, Patch patch, String namePrefix)
+            throws IOException {
+        output.putNextEntry(new ZipEntry(namePrefix + "fusepatch/"));
+        output.putNextEntry(new ZipEntry(namePrefix + "fusepatch/repository/"));
+        output.putNextEntry(new ZipEntry(namePrefix + "fusepatch/workspace/"));
+        output.putNextEntry(new ZipEntry(namePrefix + "fusepatch/workspace/audit.log"));
+        output.putNextEntry(new ZipEntry(namePrefix + "fusepatch/workspace/managed-paths.metadata"));
         writePatchManagedPaths(output, patch);
 
         PatchId pid = patch.getPatchId();
-        output.putNextEntry(new ZipEntry("fusepatch/workspace/" + pid.getName() + "/" + pid.getVersion() + "/"
-                + pid.getCanonicalForm() + ".metadata"));
+        output.putNextEntry(new ZipEntry(namePrefix + "fusepatch/workspace/" + pid.getName() + "/" + pid.getVersion()
+                + "/" + pid.getCanonicalForm() + ".metadata"));
         MetadataParser.writePatch(patch, output, true);
 
         output.closeEntry();
