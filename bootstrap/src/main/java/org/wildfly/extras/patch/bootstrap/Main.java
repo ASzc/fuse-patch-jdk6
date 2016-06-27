@@ -117,21 +117,18 @@ public class Main {
     public static String findArchiveRootDirectory(Map<String, Long> entries) {
         String rootCandidateName = null;
         String[] rootCandidate = null;
-        for (Entry<String, Long> entry : entries.entrySet()) {
-            String name = entry.getKey();
-            if (name.endsWith("/")) {
-                String[] split = name.split("/");
-                if (rootCandidate == null) {
-                    rootCandidateName = name;
-                    rootCandidate = split;
-                } else if (!rootCandidate[0].equals(split[0])) {
-                    // There isn't just one root directory
-                    rootCandidateName = null;
-                    break;
-                } else if (rootCandidate.length > split.length) {
-                    rootCandidateName = name;
-                    rootCandidate = split;
-                }
+        for (String name : entries.keySet()) {
+            String[] split = name.split("/");
+            if (rootCandidate == null) {
+                rootCandidateName = split[0] + "/";
+                rootCandidate = split;
+            } else if (!rootCandidate[0].equals(split[0])) {
+                // There isn't just one root directory
+                rootCandidateName = null;
+                break;
+            } else if (rootCandidate.length > split.length) {
+                rootCandidateName = split[0] + "/";
+                rootCandidate = split;
             }
         }
         return rootCandidateName;
