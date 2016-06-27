@@ -50,12 +50,12 @@ public class Main {
     }
 
     public static void addMetadata(File zipFile, String patchName, String patchVersion) throws IOException {
+        File replacementZipFile = new File(zipFile.getPath() + ".replacement");
         FileInputStream zipFileInputStream = null;
         try {
             zipFileInputStream = new FileInputStream(zipFile);
             ZipInputStream input = new ZipInputStream(zipFileInputStream);
 
-            File replacementZipFile = new File(zipFile.getPath() + ".replacement");
             FileOutputStream zipFileOutputStream = null;
             try {
                 zipFileOutputStream = new FileOutputStream(replacementZipFile);
@@ -73,14 +73,17 @@ public class Main {
                     } catch (IOException e) {
                     }
             }
+            if (!replacementZipFile.renameTo(zipFile)) {
+                throw new IOException("Unable to rename replacement file after adding metadata");
+            }
         } finally {
             if (zipFileInputStream != null)
                 try {
                     zipFileInputStream.close();
                 } catch (IOException e) {
                 }
+            replacementZipFile.delete(); // No IOException to catch
         }
-        // TODO move/replace orig if no error
     }
 
     public static Map<String, Long> copyAndEnumerateZipEntries(ZipInputStream input, ZipOutputStream output)
