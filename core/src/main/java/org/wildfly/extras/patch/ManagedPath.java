@@ -45,7 +45,8 @@ public final class ManagedPath {
 
     public static ManagedPath fromString(String line) {
         IllegalArgumentAssertion.assertNotNull(line, "line");
-        int index = line.indexOf(' ');
+        line = line.trim();
+        int index = line.lastIndexOf('[') - 1;
         List<PatchId> owners = new ArrayList<PatchId>();
         File path = new File(line.substring(0, index));
         String opart = line.substring(index + 1);

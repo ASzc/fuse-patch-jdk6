@@ -57,9 +57,19 @@ public final class Record {
 
     public static Record fromString(String line) {
         IllegalArgumentAssertion.assertNotNull(line, "line");
-        String[] toks = line.split("[\\s]");
-        IllegalStateAssertion.assertEquals(3, toks.length, "Invalid line: " + line);
-        return new Record(null, Record.Action.valueOf(toks[0]), new File(toks[1]), new Long(toks[2]));
+        line = line.trim();
+        int actionEndIndex = line.indexOf(' ');
+        int checksumStartIndex = line.lastIndexOf(' ');
+
+        String action = line.substring(0, actionEndIndex);
+        String path = line.substring(actionEndIndex + 1, checksumStartIndex);
+        String checksum = line.substring(checksumStartIndex + 1);
+
+        IllegalStateAssertion.assertFalse(action.isEmpty(), "Zero-length action parsed from line: " + line);
+        IllegalStateAssertion.assertFalse(path.isEmpty(), "Zero-length path parsed from line: " + line);
+        IllegalStateAssertion.assertFalse(checksum.isEmpty(), "Zero-length checksum parsed from line: " + line);
+
+        return new Record(null, Record.Action.valueOf(action), new File(path), new Long(checksum));
     }
     
     private Record(PatchId patchId, Action action, File path, Long checksum) {
