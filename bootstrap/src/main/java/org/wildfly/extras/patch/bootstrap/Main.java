@@ -62,13 +62,15 @@ public class Main {
                 ZipOutputStream output = new ZipOutputStream(zipFileOutputStream);
 
                 Map<String, Long> entries = copyAndEnumerateZipEntries(input, output);
-                Patch patch = createPatchFromZipEntries(entries, patchName, patchVersion);
 
                 String root = findArchiveRootDirectory(entries);
                 // In the case of no unique root directory, add another root
                 // directory
                 if (root == null)
                     root = "";
+
+                Patch patch = createPatchFromZipEntries(entries, root, patchName, patchVersion);
+
                 appendMetadataEntries(output, patch, root);
                 output.close();
             } finally {
@@ -134,11 +136,16 @@ public class Main {
         return rootCandidateName;
     }
 
-    public static Patch createPatchFromZipEntries(Map<String, Long> entries, String patchName, String patchVersion) {
+    public static Patch createPatchFromZipEntries(Map<String, Long> entries, String pathRoot, String patchName,
+            String patchVersion) {
+        Integer pathTrim = pathRoot.length();
         PatchId patchId = PatchId.create(patchName, patchVersion);
         Collection<Record> records = new ArrayList<Record>(entries.size());
         for (Entry<String, Long> entry : entries.entrySet()) {
-            Record record = Record.create(patchId, Action.INFO, new File(entry.getKey()), entry.getValue());
+            // In the case of a single root directory, the metadata paths should
+            // be relative to that, instead of the zip root.
+            String path = entry.getKey().substring(pathTrim);
+            Record record = Record.create(patchId, Action.INFO, new File(path), entry.getValue());
             records.add(record);
         }
         return Patch.create(new PatchMetadataBuilder().patchId(patchId).build(), records);
