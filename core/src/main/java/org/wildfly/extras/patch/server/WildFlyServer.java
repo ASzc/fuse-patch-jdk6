@@ -87,6 +87,18 @@ public final class WildFlyServer extends AbstractServer {
         }
     }
 
+    protected File getPatchModuleBase() {
+        File patchModuleBase = new File(getServerHome(),
+                "modules" + File.separator +
+                "system" + File.separator +
+                "layers" + File.separator +
+                "fuse" + File.separator +
+                "org" + File.separator +
+                "wildfly" + File.separator +
+                "extras");
+        return patchModuleBase;
+    }
+
     @Override
     protected void updateServerFiles(SmartPatch smartPatch, ManagedPaths managedPaths) throws IOException {
         super.updateServerFiles(smartPatch, managedPaths);
@@ -95,7 +107,7 @@ public final class WildFlyServer extends AbstractServer {
         
         // Ensure Fuse layer exists
         File modulesPath = new File(homePath, "modules");
-        if (modulesPath.isDirectory()) {
+        if (modulesPath.isDirectory() && getPatchModuleBase().exists()) {
             Properties props = new Properties();
             File layersPath = new File(modulesPath, "layers.conf");
             if (layersPath.isFile()) {
@@ -135,14 +147,7 @@ public final class WildFlyServer extends AbstractServer {
     @Override
     public void cleanUp() {
         final List<String> currentFiles = new ArrayList<String>();
-        File patchModuleBase = new File(getServerHome(),
-                "modules" + File.separator +
-                "system" + File.separator +
-                "layers" + File.separator +
-                "fuse" + File.separator +
-                "org" + File.separator +
-                "wildfly" + File.separator +
-                "extras");
+        File patchModuleBase = getPatchModuleBase();
         if (patchModuleBase.exists()) {
             String[] patchModuleNames = {"config", "patch"};
             for (String moduleName : patchModuleNames) {
