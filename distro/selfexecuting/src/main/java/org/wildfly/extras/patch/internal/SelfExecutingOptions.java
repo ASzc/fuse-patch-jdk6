@@ -28,7 +28,7 @@ final class SelfExecutingOptions {
     String installId;
 
     @Option(name = "--update", metaVar = "PKG", forbids = { "--install",
-            "--uninstall" }, usage = "Update the server for the given patch name. Examples of PKG: somepkg")
+            "--uninstall" }, usage = "Update the server for the given patch name. Example of PKG: somepkg")
     String updateName;
 
     @Option(name = "--uninstall", metaVar = "PKG", forbids = { "--install",
