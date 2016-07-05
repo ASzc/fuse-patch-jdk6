@@ -203,10 +203,9 @@ public abstract class AbstractServer implements Server {
             // Replace records in the replace set
             for (Record rec : smartPatch.getReplaceSet()) {
                 File path = new File(homePath, rec.getPath().getPath());
-                String filename = path.getName();
                 if (!path.exists()) {
                     LOG.warn("Attempt to replace a non existing file: {}", rec.getPath());
-                } else if (filename.endsWith(".xml") || filename.endsWith(".properties")) {
+                } else {
                     Record exprec = serverRecords.get(rec.getPath());
                     Long expcheck = exprec != null ? exprec.getChecksum() : 0L;
                     Long wasCheck = IOUtils.getCRC32(path);
