@@ -230,7 +230,9 @@ public abstract class AbstractServer implements Server {
                 if (path.exists()) {
                     Long expcheck = rec.getChecksum();
                     Long wasCheck = IOUtils.getCRC32(path);
-                    if (!expcheck.equals(wasCheck)) {
+                    if (expcheck.equals(wasCheck)) {
+                        LOG.info("Using already existing file (matches required checksum): {}", rec.getPath());
+                    } else {
                         if (force) {
                             LOG.warn("Overriding an already existing file: {}", rec.getPath());
                         } else {
