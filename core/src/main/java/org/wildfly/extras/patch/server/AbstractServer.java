@@ -245,7 +245,7 @@ public abstract class AbstractServer implements Server {
             }
 
             if (hasCheckFailures)
-                throw new PatchException("One or more CRC checks failed, aborting operation. Use --force to override.");
+                throw new PatchException("One or more checksum failures, aborting operation. Use --force to override.");
 
             // Update managed paths
             ManagedPaths managedPaths = readManagedPaths(getWorkspace());
