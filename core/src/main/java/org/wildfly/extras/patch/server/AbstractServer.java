@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.wildfly.extras.patch.ManagedPath;
 import org.wildfly.extras.patch.ManagedPaths;
 import org.wildfly.extras.patch.Patch;
+import org.wildfly.extras.patch.PatchException;
 import org.wildfly.extras.patch.PatchId;
 import org.wildfly.extras.patch.PatchMetadata;
 import org.wildfly.extras.patch.PatchMetadataBuilder;
@@ -200,6 +201,8 @@ public abstract class AbstractServer implements Server {
                 serverRecords.remove(rec.getPath());
             }
 
+            boolean hasCheckFailures = false;
+
             // Replace records in the replace set
             for (Record rec : smartPatch.getReplaceSet()) {
                 File path = new File(homePath, rec.getPath().getPath());
@@ -210,8 +213,12 @@ public abstract class AbstractServer implements Server {
                     Long expcheck = exprec != null ? exprec.getChecksum() : 0L;
                     Long wasCheck = IOUtils.getCRC32(path);
                     if (!expcheck.equals(wasCheck)) {
-                        PatchAssertion.assertTrue(force, "Attempt to override an already modified file " + rec.getPath());
-                        LOG.warn("Overriding an already modified file: {}", rec.getPath());
+                        if (force) {
+                            LOG.warn("Overriding an already modified file: {}", rec.getPath());
+                        } else {
+                            LOG.error("Attempt to override an already modified file " + rec.getPath());
+                            hasCheckFailures = true;
+                        }
                     }
                 }
                 serverRecords.put(rec.getPath(), rec);
@@ -224,12 +231,19 @@ public abstract class AbstractServer implements Server {
                     Long expcheck = rec.getChecksum();
                     Long wasCheck = IOUtils.getCRC32(path);
                     if (!expcheck.equals(wasCheck)) {
-                        PatchAssertion.assertTrue(force, "Attempt to add an already existing file " + rec.getPath());
-                        LOG.warn("Overriding an already existing file: {}", rec.getPath());
+                        if (force) {
+                            LOG.warn("Overriding an already existing file: {}", rec.getPath());
+                        } else {
+                            LOG.error("Attempt to add an already existing file " + rec.getPath());
+                            hasCheckFailures = true;
+                        }
                     }
                 }
                 serverRecords.put(rec.getPath(), rec);
             }
+
+            if (hasCheckFailures)
+                throw new PatchException("One or more CRC checks failed, aborting operation. Use --force to override.");
 
             // Update managed paths
             ManagedPaths managedPaths = readManagedPaths(getWorkspace());
