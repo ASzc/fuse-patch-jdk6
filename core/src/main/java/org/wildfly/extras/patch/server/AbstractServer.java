@@ -192,16 +192,28 @@ public abstract class AbstractServer implements Server {
             }
             LOG.info(message);
 
+            boolean hasCheckFailures = false;
+
             // Remove all records in the remove set
             for (Record rec : smartPatch.getRemoveSet()) {
                 File path = new File(homePath, rec.getPath().getPath());
                 if (!path.exists()) {
                     LOG.warn("Attempt to delete a non existing file: {}", rec.getPath());
+                } else {
+                    Record exprec = serverRecords.get(rec.getPath());
+                    Long expcheck = exprec != null ? exprec.getChecksum() : 0L;
+                    Long wasCheck = IOUtils.getCRC32(path);
+                    if (!expcheck.equals(wasCheck)) {
+                        if (force) {
+                            LOG.warn("Deleting an already modified file: {}", rec.getPath());
+                        } else {
+                            LOG.error("Attempt to delete an already modified file " + rec.getPath());
+                            hasCheckFailures = true;
+                        }
+                    }
                 }
                 serverRecords.remove(rec.getPath());
             }
-
-            boolean hasCheckFailures = false;
 
             // Replace records in the replace set
             for (Record rec : smartPatch.getReplaceSet()) {
