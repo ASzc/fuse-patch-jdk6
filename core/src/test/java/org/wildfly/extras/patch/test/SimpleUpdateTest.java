@@ -249,7 +249,9 @@ public class SimpleUpdateTest {
             patchTool.install(idA, false);
             Assert.fail("PatchException expected");
         } catch (PatchException ex) {
-            Assert.assertTrue(ex.getMessage().contains("existing file config" + File.separator  + "propsA.properties"));
+         // Technically should assert on the log, but junit doesn't offer something for that
+            Assert.assertEquals(ex.getMessage(),
+                    "One or more checksum failures, aborting operation. Use --force to override.");
         }
         
         // Force the the override
@@ -296,7 +298,9 @@ public class SimpleUpdateTest {
             patchTool.install(idB, false);
             Assert.fail("PatchException expected");
         } catch (PatchException ex) {
-            Assert.assertTrue(ex.getMessage().contains("already modified file config" + File.separator + "propsA.properties"));
+            // Technically should assert on the log, but junit doesn't offer something for that
+            Assert.assertEquals(ex.getMessage(),
+                    "One or more checksum failures, aborting operation. Use --force to override.");
         }
         
         // force the the override
