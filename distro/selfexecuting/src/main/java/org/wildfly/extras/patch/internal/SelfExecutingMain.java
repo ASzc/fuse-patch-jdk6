@@ -1,13 +1,19 @@
 package org.wildfly.extras.patch.internal;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.spi.OptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wildfly.extras.patch.ManagedPath;
@@ -31,6 +37,10 @@ public class SelfExecutingMain {
     public static void mainInternal(String[] args) throws Throwable {
         SelfExecutingOptions options = new SelfExecutingOptions();
         CmdLineParser parser = new CmdLineParser(options);
+
+        // Remove any options marked for removal by patch creator
+        removeOptions(parser);
+
         try {
             parser.parseArgument(args);
         } catch (CmdLineException ex) {
@@ -132,6 +142,33 @@ public class SelfExecutingMain {
     private static void printPatches(List<PatchId> patches) {
         for (PatchId patchId : patches) {
             System.out.println(patchId.toString());
+        }
+    }
+
+    private static void removeOptions(CmdLineParser parser) throws IOException {
+        HashSet<String> removeNames = new HashSet<String>();
+        URL removalFile = SelfExecutingMain.class.getClassLoader().getResource("fp_option_removals");
+        if (removalFile != null) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(removalFile.openStream()));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line != "") {
+                    // ex: --uninstall
+                    removeNames.add(line);
+                }
+            }
+        }
+
+        LinkedList<OptionHandler<?>> toRemove = new LinkedList<OptionHandler<?>>();
+        for (OptionHandler<?> option : parser.getOptions()) {
+            if (removeNames.contains(option.option.toString())) {
+                toRemove.add(option);
+            }
+        }
+
+        for (OptionHandler<?> option : toRemove) {
+            parser.getOptions().remove(option);
         }
     }
 }
